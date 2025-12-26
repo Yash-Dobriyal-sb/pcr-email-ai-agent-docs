@@ -19,6 +19,7 @@ import {
   GitPullRequest,
   ChevronRight,
   Sparkles,
+  Workflow,
 } from "lucide-react"
 
 const navigation = [
@@ -28,6 +29,16 @@ const navigation = [
   { name: "Scheduling Algorithm", href: "/scheduling", icon: Calendar },
   { name: "Email Processing", href: "/email-processing", icon: Mail },
   { name: "Services Layer", href: "/services", icon: Layers },
+  {
+    name: "Flowchart",
+    href: "/flowchart",
+    icon: Workflow,
+    children: [
+      { name: "Leave", href: "/flowchart/leave" },
+      { name: "Buffer", href: "/flowchart/buffer" },
+      { name: "Booking", href: "/flowchart/booking" },
+    ],
+  },
   { name: "Features", href: "/features", icon: Star },
   { name: "API Reference", href: "/api-reference", icon: Code },
   { name: "Database Schema", href: "/database", icon: Database },
@@ -66,19 +77,15 @@ export function Sidebar() {
             <div className="px-2 mb-2 text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">
               Navigation
             </div>
-            {navigation.map((item, index) => {
+            {navigation.map((item) => {
               const isActive = pathname === item.href
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={cn(
-                    "group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 relative overflow-hidden",
-                    isActive
-                      ? "text-primary bg-primary/10 shadow-sm"
-                      : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground",
-                  )}
-                >
+              const hasChildren = "children" in item
+              // @ts-ignore
+              const isChildActive = hasChildren && item.children.some((child) => pathname === child.href)
+              const isOpen = isActive || isChildActive
+
+              const LinkContent = (
+                <>
                   {/* Active indicator pill */}
                   {isActive && (
                     <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full" />
@@ -88,21 +95,72 @@ export function Sidebar() {
                     <item.icon
                       className={cn(
                         "mr-3 h-4 w-4 flex-shrink-0 transition-colors duration-200",
-                        isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground",
+                        isActive || isChildActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground",
                       )}
                     />
                     {item.name}
                   </div>
-                  {/* Subtle chevron only on hover or active */}
+                  {/* Subtle chevron */}
                   <ChevronRight
                     className={cn(
                       "h-3.5 w-3.5 transition-all duration-200 opacity-0 -translate-x-2",
-                      (isActive || "group-hover:opacity-100 group-hover:translate-x-0") && "opacity-100 translate-x-0",
-                      isActive ? "text-primary" : "text-muted-foreground",
+                      (isOpen || "group-hover:opacity-100 group-hover:translate-x-0") && "opacity-100 translate-x-0",
+                      isActive || isChildActive ? "text-primary" : "text-muted-foreground",
+                      hasChildren && isOpen && "rotate-90",
                     )}
                   />
+                </>
+              )
+
+              const ParentLink = (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={cn(
+                    "group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 relative overflow-hidden",
+                    isActive || isChildActive
+                      ? "text-primary bg-primary/10 shadow-sm"
+                      : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground",
+                  )}
+                >
+                  {LinkContent}
                 </Link>
               )
+
+              if (hasChildren) {
+                return (
+                  <div key={item.name}>
+                    {ParentLink}
+                    <div
+                      className={cn(
+                        "mt-1 ml-4 border-l border-border/50 pl-2 space-y-1 overflow-hidden transition-all duration-300 ease-in-out",
+                        isOpen ? "max-h-40 opacity-100" : "max-h-0 opacity-0",
+                      )}
+                    >
+                      {/* @ts-ignore */}
+                      {item.children.map((child) => {
+                        const isChildItemActive = pathname === child.href
+                        return (
+                          <Link
+                            key={child.name}
+                            href={child.href}
+                            className={cn(
+                              "flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200",
+                              isChildItemActive
+                                ? "text-primary bg-primary/5 text-primary"
+                                : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/50",
+                            )}
+                          >
+                            {child.name}
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              }
+
+              return ParentLink
             })}
           </nav>
 

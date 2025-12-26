@@ -582,6 +582,142 @@ export default function Database() {
         )}
       </Card>
 
+
+
+      {/* Table: inspector_buffer_availability */}
+      <Card className="border-l-4 border-l-yellow-500">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between cursor-pointer" onClick={() => toggleTable("buffer")}>
+            <div className="flex items-center gap-3">
+              <Badge className="bg-yellow-500">New</Badge>
+              <CardTitle>inspector_buffer_availability</CardTitle>
+            </div>
+            <ChevronDown
+              className={`w-5 h-5 transition-transform ${expandedTables["buffer"] ? "rotate-180" : ""}`}
+            />
+          </div>
+        </CardHeader>
+        {expandedTables["buffer"] && (
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Stores inspector buffer zones (time blocks where inspections cannot be scheduled)
+            </p>
+
+            <div>
+              <h4 className="font-semibold text-sm mb-3">Schema:</h4>
+              <CodeBlock
+                code={`CREATE TABLE public.inspector_buffer_availability (
+    id BIGSERIAL PRIMARY KEY,
+    inspector_id UUID NOT NULL REFERENCES inspectors(id) ON DELETE CASCADE,
+    account_id BIGINT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    is_all_day BOOLEAN NOT NULL DEFAULT FALSE,
+    time_start TIME NULL,
+    time_end TIME NULL,
+    note TEXT NULL,
+    source TEXT NOT NULL DEFAULT 'manual' CHECK (source IN ('manual', 'system', 'google_sync')),
+    raw_payload JSONB NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);`}
+                language="sql"
+                title="inspector_buffer_availability"
+              />
+            </div>
+          </CardContent>
+        )}
+      </Card>
+
+      {/* Table: inspector_availability */}
+      <Card className="border-l-4 border-l-teal-500">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between cursor-pointer" onClick={() => toggleTable("availability")}>
+            <div className="flex items-center gap-3">
+              <Badge className="bg-teal-500">New</Badge>
+              <CardTitle>inspector_availability</CardTitle>
+            </div>
+            <ChevronDown
+              className={`w-5 h-5 transition-transform ${expandedTables["availability"] ? "rotate-180" : ""}`}
+            />
+          </div>
+        </CardHeader>
+        {expandedTables["availability"] && (
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Defines working hours, sessions, and recurrence rules for inspector availability
+            </p>
+
+            <div>
+              <h4 className="font-semibold text-sm mb-3">Schema:</h4>
+              <CodeBlock
+                code={`CREATE TABLE public.inspector_availability (
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    inspector_id UUID NOT NULL REFERENCES inspectors(id) ON DELETE CASCADE,
+    account_id BIGINT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    is_all_day BOOLEAN NOT NULL DEFAULT FALSE,
+    session TEXT NOT NULL DEFAULT 'full_day' CHECK (session IN ('morning', 'afternoon', 'evening', 'full_day')),
+    availability_percent INT NOT NULL CHECK (availability_percent IN (0, 33, 66, 100)),
+    time_start TIME NULL,
+    time_end TIME NULL,
+    note TEXT NULL,
+    is_recurring BOOLEAN NOT NULL DEFAULT FALSE,
+    recurrence_rule_id UUID NULL REFERENCES recurrence_rules(id),
+    calendar_raw_response JSONB NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);`}
+                language="sql"
+                title="inspector_availability"
+              />
+            </div>
+          </CardContent>
+        )}
+      </Card>
+
+      {/* Table: recurrence_rules */}
+      <Card className="border-l-4 border-l-indigo-500">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between cursor-pointer" onClick={() => toggleTable("recurrence")}>
+            <div className="flex items-center gap-3">
+              <Badge className="bg-indigo-500">New</Badge>
+              <CardTitle>recurrence_rules</CardTitle>
+            </div>
+            <ChevronDown
+              className={`w-5 h-5 transition-transform ${expandedTables["recurrence"] ? "rotate-180" : ""}`}
+            />
+          </div>
+        </CardHeader>
+        {expandedTables["recurrence"] && (
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Shared recurrence patterns for availability and leaves (RFC 5545 style)
+            </p>
+
+            <div>
+              <h4 className="font-semibold text-sm mb-3">Schema:</h4>
+              <CodeBlock
+                code={`CREATE TABLE public.recurrence_rules (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    freq TEXT NOT NULL CHECK (freq IN ('DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY')),
+    interval INT NOT NULL DEFAULT 1,
+    bymonth INT[],
+    bymonthday INT[],
+    byweekday INT[],
+    until DATE,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);`}
+                language="sql"
+                title="recurrence_rules"
+              />
+            </div>
+          </CardContent>
+        )}
+      </Card>
+
       {/* Table 7: property_managers */}
       <Card className="border-l-4 border-l-pink-500">
         <CardHeader className="pb-3">
@@ -692,6 +828,6 @@ property_managers ──many-to-many──→ inspectors
           </div>
         </CardContent>
       </Card>
-    </div>
+    </div >
   )
 }
